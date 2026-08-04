@@ -29,4 +29,4 @@ SCHEMA_LOCATION=$PWD/schema.json npm run validate
 
 ## Delete
 You can delete published DPDs by running the [`.github/workflows/delete-dpds.yml`](.github/workflows/delete-dpds.yml).
-This will remove the DPDs from S3  but they will still remain in the Github repo.
+This will remove the DPDs from S3, but they will still remain present in the GitHub repo.
