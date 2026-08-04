@@ -10,6 +10,10 @@ DPD JSON files live under `definitions/` and are published to S3 by
 Actions tab → **Publish DPDs** → Run workflow → pick environment
 (`development`, `test`, `preproduction`, `production`).
 
+The reports/dashboards will be available in the prisons and probation reporting platforms around 10 minutes after the publication.
+Platform links for the development environment:
+https://digital-prison-reporting-mi-ui-dev.hmpps.service.justice.gov.uk/
+https://hmpps-probation-mi-ui-dev.hmpps.service.justice.gov.uk
 
 ## Validation 
 
