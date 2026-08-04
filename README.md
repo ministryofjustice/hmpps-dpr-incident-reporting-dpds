@@ -1,1 +1,32 @@
-This is a test project to test the separation of the definitions repositories per team.
+# hmpps-dpr-activities-dpds
+
+Data Product Definitions for Activities.
+
+DPD JSON files live under `definitions/` and are published to S3 by
+[`.github/workflows/publish-dpds.yml`](.github/workflows/publish-dpds.yml).
+
+## Publish
+
+Actions tab → **Publish DPDs** → Run workflow → pick environment
+(`development`, `test`, `preproduction`, `production`).
+
+
+## Validation 
+
+The DPDs are validated against the following schema:
+https://raw.githubusercontent.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema/main/schema/1.0.0/data-product-definition-schema.json
+
+This validation is part of the [`.github/workflows/publish-dpds.yml`](.github/workflows/publish-dpds.yml) Workflow.
+
+If you would like to also validate locally you could run:
+```sh
+npm ci
+curl -fsSL \
+  https://raw.githubusercontent.com/ministryofjustice/hmpps-digital-prison-reporting-data-product-definitions-schema/main/schema/1.0.0/data-product-definition-schema.json \
+  -o schema.json
+SCHEMA_LOCATION=$PWD/schema.json npm run validate
+```
+
+## Delete
+You can delete published DPDs by running the [`.github/workflows/delete-dpds.yml`](.github/workflows/delete-dpds.yml).
+This will remove the DPDs from S3  but they will still remain in the Github repo.
