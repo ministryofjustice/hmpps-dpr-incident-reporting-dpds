@@ -14,7 +14,7 @@ on:
           - preproduction
           - production
       confirmedTestedInLowerEnvs:
-        description: "I confirm that I have fully tested these DPDs in all lower environments (development, test, and preproduction) before publishing to production."
+        description: "I confirm that I have fully tested these DPDs in all lower environments (development, test, and preproduction) and Tools UI in production before publishing to production."
         required: false
         default: false
         type: boolean
