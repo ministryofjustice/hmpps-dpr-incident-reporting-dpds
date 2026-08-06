@@ -13,6 +13,11 @@ on:
           - test
           - preproduction
           - production
+      confirmedTestedInLowerEnvs:
+        description: "I confirm that I have fully tested these DPDs in all lower environments (development, test, and preproduction) before publishing to production."
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   id-token: write
@@ -28,6 +33,15 @@ jobs:
       SCHEMA_LOCATION: "${{ github.workspace }}/schema.json"
 
     steps:
+      - name: Production gate — confirm lower environment testing
+        if: ${{ inputs.deployEnv == 'production' }}
+        run: |
+          if [ "${{ inputs.confirmedTestedInLowerEnvs }}" != "true" ]; then
+            echo "::error::You must confirm that you have tested in all lower environments before publishing to production. Please re-run the workflow and tick the confirmation checkbox."
+            exit 1
+          fi
+          echo "Confirmation received. Proceeding with production deployment."
+
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       # Validation
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
