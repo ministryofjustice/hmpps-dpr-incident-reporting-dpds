@@ -1,6 +1,6 @@
-# hmpps-dpr-activities-dpds
+# hmpps-dpr-incident-reporting-dpds
 
-Data Product Definitions for Activities.
+Data Product Definitions for incident-reporting.
 
 DPD JSON files live under `definitions/` and are published to S3 by
 [`.github/workflows/publish-dpds.yml`](.github/workflows/publish-dpds.yml).
