@@ -1,6 +1,6 @@
 {
-  "id": "dps-veterans-in-custody-by-establishment-report",
-  "name": "Test Only - DPS report on veterans in custody by establishment",
+  "id": "dps-veterans-in-custody-by-establishment-report-inc-rep-test",
+  "name": "Incident Reporting Test Only - DPS report on veterans in custody by establishment",
   "description": "This report lists the veterans currently in custody in one or more of the users caseloads, including their status and relevant details.",
   "metadata": {
     "version": "1.0.0"
@@ -157,7 +157,7 @@
   "report": [
     {
       "id": "dps-veterans-in-custody-by-establishment",
-      "name": "Test Only - Veterans in Custody by Establishment",
+      "name": "Incident Reporting Test Only - Veterans in Custody by Establishment",
       "classification": "OFFICIAL",
       "version": "1.0.0",
       "render": "HTML",

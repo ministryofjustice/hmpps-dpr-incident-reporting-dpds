@@ -1,6 +1,6 @@
 {
-  "id": "act001-alpha-list-with-activities",
-  "name": "Testing Only - Alpha List with Activities ACT0027 v2111 View time slot and alerts version (hardcoded prison code)",
+  "id": "act001-alpha-list-with-activities-inc-rep-test",
+  "name": "Incident Reporting Testing Only - Alpha List with Activities ACT0027 v2111 View time slot and alerts version (hardcoded prison code)",
   "description": "The report has been requested to assist in the suitable stock selection and library attendance of prisoners. Other establishment users may also find this report beneficial as it lists all Prisoners in an establishment along with their Personal details and current Activity Description(s)",
   "metadata": {
     "author": "Zahoor Hussain",
@@ -247,7 +247,7 @@
   "report": [
     {
       "id": "activities-in-progress",
-      "name": "Testing Only - List of activities",
+      "name": "Incident Reporting Testing Only - List of activities",
       "description": "A list of activities sortable by wing",
       "classification": "Official",
       "version": "1.0.0",
