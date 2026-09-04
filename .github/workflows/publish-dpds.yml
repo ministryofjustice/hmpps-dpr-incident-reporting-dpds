@@ -62,6 +62,23 @@ jobs:
       - name: Validate DPDs against schema
         run: npm run validate
 
+      - name: Debug GitHub OIDC claims
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const token = await core.getIDToken('sts.amazonaws.com')
+            const payload = JSON.parse(
+              Buffer.from(token.split('.')[1], 'base64url').toString()
+            )
+            
+            console.log(JSON.stringify({
+              sub: payload.sub,
+              aud: payload.aud,
+              repository: payload.repository,
+              environment: payload.environment,
+              ref: payload.ref
+            }, null, 2))
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@e3dd6a429d7300a6a4c196c26e071d42e0343502
         with:
