@@ -63,7 +63,7 @@ jobs:
         run: npm run validate
 
       - name: Debug GitHub OIDC claims
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
         with:
           script: |
             const token = await core.getIDToken('sts.amazonaws.com')
