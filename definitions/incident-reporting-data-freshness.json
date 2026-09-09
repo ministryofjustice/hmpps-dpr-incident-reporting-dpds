@@ -49,19 +49,59 @@
       "name": "Datamart freshness against live IRS",
       "description": "Two rows: the live Incident Reporting service and the datamart copy, with the lag of the datamart behind live.",
       "datasource": "athena",
-      "query": "WITH sources AS (SELECT 1 AS sort_order, 'Live IRS (source of truth)' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM dps_inc_reporting.public.report UNION ALL SELECT 2 AS sort_order, 'Datamart' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM AwsDataCatalog.prisons.incidentreporting_report), compared AS (SELECT sort_order, source, latest_created_at, latest_reference, report_count, MAX(CASE WHEN sort_order = 1 THEN latest_created_at END) OVER () AS live_created_at, MAX(CASE WHEN sort_order = 1 THEN report_count END) OVER () AS live_report_count FROM sources) SELECT sort_order, source, latest_created_at, latest_reference, report_count, CASE WHEN sort_order = 1 THEN NULL ELSE date_diff('minute', latest_created_at, live_created_at) END AS lag_minutes, CASE WHEN sort_order = 1 THEN 'n/a' WHEN date_diff('minute', latest_created_at, live_created_at) < 60 THEN format('%s min', date_diff('minute', latest_created_at, live_created_at)) WHEN date_diff('minute', latest_created_at, live_created_at) < 1440 THEN format('%s hr', date_diff('hour', latest_created_at, live_created_at)) ELSE format('%s days %s hr', date_diff('day', latest_created_at, live_created_at), date_diff('hour', latest_created_at, live_created_at) % 24) END AS behind_by, CASE WHEN sort_order = 1 THEN NULL ELSE live_report_count - report_count END AS missing_reports, CASE WHEN sort_order = 1 THEN 'Source' WHEN date_diff('minute', latest_created_at, live_created_at) < 60 THEN 'Up to date' WHEN date_diff('minute', latest_created_at, live_created_at) < 1440 THEN 'Behind by less than a day' ELSE 'Behind' END AS freshness_status, CAST(current_timestamp AS timestamp) AS checked_at FROM compared ORDER BY sort_order",
+      "query": "WITH sources AS (SELECT 1 AS sort_order, 'Live IRS (source of truth)' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM dps_inc_reporting.public.report UNION ALL SELECT 2 AS sort_order, 'Datamart' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM AwsDataCatalog.prisons.incidentreporting_report), compared AS (SELECT sort_order, source, latest_created_at, latest_reference, report_count, MAX(CASE WHEN sort_order = 1 THEN latest_created_at END) OVER () AS live_created_at, MAX(CASE WHEN sort_order = 1 THEN report_count END) OVER () AS live_report_count FROM sources), lagged AS (SELECT sort_order, source, latest_created_at, latest_reference, report_count, CASE WHEN sort_order = 1 THEN NULL ELSE date_diff('minute', latest_created_at, live_created_at) END AS lag_minutes, CASE WHEN sort_order = 1 THEN NULL ELSE live_report_count - report_count END AS missing_reports FROM compared) SELECT sort_order, source, latest_created_at, latest_reference, report_count, lag_minutes, CASE WHEN lag_minutes IS NULL THEN 'n/a' WHEN lag_minutes < 60 THEN format('%s min', lag_minutes) WHEN lag_minutes < 1440 THEN format('%s hr', lag_minutes / 60) ELSE format('%s day%s %s hr', lag_minutes / 1440, CASE WHEN lag_minutes / 1440 = 1 THEN '' ELSE 's' END, (lag_minutes % 1440) / 60) END AS behind_by, missing_reports, CASE WHEN lag_minutes IS NULL THEN 'Source' WHEN lag_minutes < 60 THEN 'Up to date' WHEN lag_minutes < 1440 THEN 'Behind by less than a day' ELSE 'Behind' END AS freshness_status, CAST(current_timestamp AS timestamp) AS checked_at FROM lagged ORDER BY sort_order",
       "schema": {
         "field": [
-          { "name": "sort_order", "type": "int", "display": "Order" },
-          { "name": "source", "type": "string", "display": "Data source" },
-          { "name": "latest_created_at", "type": "datetime", "display": "Latest incident report held" },
-          { "name": "latest_reference", "type": "long", "display": "Latest incident number held" },
-          { "name": "report_count", "type": "long", "display": "Incident reports held" },
-          { "name": "lag_minutes", "type": "long", "display": "Lag (minutes)" },
-          { "name": "behind_by", "type": "string", "display": "Behind live by" },
-          { "name": "missing_reports", "type": "long", "display": "Incident reports missing" },
-          { "name": "freshness_status", "type": "string", "display": "Status" },
-          { "name": "checked_at", "type": "datetime", "display": "Checked at" }
+          {
+            "name": "sort_order",
+            "type": "int",
+            "display": "Order"
+          },
+          {
+            "name": "source",
+            "type": "string",
+            "display": "Data source"
+          },
+          {
+            "name": "latest_created_at",
+            "type": "datetime",
+            "display": "Latest incident report held"
+          },
+          {
+            "name": "latest_reference",
+            "type": "long",
+            "display": "Latest incident number held"
+          },
+          {
+            "name": "report_count",
+            "type": "long",
+            "display": "Incident reports held"
+          },
+          {
+            "name": "lag_minutes",
+            "type": "long",
+            "display": "Lag (minutes)"
+          },
+          {
+            "name": "behind_by",
+            "type": "string",
+            "display": "Behind live by"
+          },
+          {
+            "name": "missing_reports",
+            "type": "long",
+            "display": "Incident reports missing"
+          },
+          {
+            "name": "freshness_status",
+            "type": "string",
+            "display": "Status"
+          },
+          {
+            "name": "checked_at",
+            "type": "datetime",
+            "display": "Checked at"
+          }
         ]
       }
     }
