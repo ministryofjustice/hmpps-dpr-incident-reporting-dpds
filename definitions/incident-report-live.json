@@ -13,16 +13,16 @@
   },
   "datasource": [
     {
-      "id": "datamart",
-      "name": "datamart"
-    },
-    {
       "id": "athena",
       "name": "athena",
       "database": "reports",
       "catalog": "AwsDataCatalog",
       "connection": "awsdatacatalog",
       "dialect": "athena/3"
+    },
+    {
+      "id": "datamart",
+      "name": "datamart"
     }
   ],
   "policy": [
@@ -246,11 +246,6 @@
           "type": "print"
         }
       ],
-      "metadata": {
-        "hints": [
-          "interactive"
-        ]
-      },
       "specification": {
         "template": "list",
         "field": [
