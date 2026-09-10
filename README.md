@@ -15,6 +15,27 @@ Platform links for the development environment:
 https://digital-prison-reporting-mi-ui-dev.hmpps.service.justice.gov.uk/
 https://hmpps-probation-mi-ui-dev.hmpps.service.justice.gov.uk
 
+## `definitions/experimental/`
+
+Throwaway DPDs used to diagnose problems — usually by stripping parts of a real
+definition until a failure goes away. They are published to the lower
+environments like anything else, but the publish workflow **excludes them from
+production**.
+
+They are not products. Delete them once the investigation that created them is
+closed.
+
+Currently present, both pending [IR-1933](https://dsdmoj.atlassian.net/browse/IR-1933):
+
+| File | What it isolates |
+|---|---|
+| `incident-report-live-min.json` | `incident-report-live` with the row-level policy, filters and filter datasets removed |
+| `incident-report-live-policy.json` | the same, with only the row-level caseload policy added back |
+
+Note that `incident-report-live-min.json` has **no row-level caseload policy**, so
+it shows every establishment to anyone holding the report role. That is the point
+of it, and it is also why it must not reach production.
+
 ## Validation 
 
 The DPDs are validated against the following schema:
