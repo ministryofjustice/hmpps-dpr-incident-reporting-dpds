@@ -70,5 +70,15 @@ jobs:
 
       - name: Upload DPDs
         run: |
+          # definitions/experimental/ holds throwaway variants used to diagnose
+          # DPR-side problems. They are useful in the lower environments and must
+          # never reach production, so they are excluded there.
+          EXCLUDE=()
+          if [ "${{ inputs.deployEnv }}" = "production" ]; then
+            EXCLUDE=(--exclude "experimental/*")
+            echo "::notice::Production deploy - excluding definitions/experimental/"
+          fi
+
           aws s3 sync definitions/ \
-            s3://dpr-data-product-definitions-${{ inputs.deployEnv }}/incident-reporting/
+            s3://dpr-data-product-definitions-${{ inputs.deployEnv }}/incident-reporting/ \
+            "${EXCLUDE[@]}"
