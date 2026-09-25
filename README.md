@@ -25,11 +25,9 @@ production**.
 They are not products. Delete them once the investigation that created them is
 closed.
 
-Currently present:
-
-| File | Why it is here |
-|---|---|
-| `incident-report-live.json` | Proof that a report can read live IRS data alongside the datamart ([IR-1927](https://dsdmoj.atlassian.net/browse/IR-1927)). Kept out of production until reading live IRS data from production has been tested and agreed. |
+There are none at present. `incident-report-live.json`, which proved that a report can read live
+IRS data alongside the datamart, moved out of here into production under
+[IR-1927](https://dsdmoj.atlassian.net/browse/IR-1927).
 
 ## Validation 
 
