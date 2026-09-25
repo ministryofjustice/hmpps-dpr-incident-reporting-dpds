@@ -25,16 +25,11 @@ production**.
 They are not products. Delete them once the investigation that created them is
 closed.
 
-Currently present, both pending [IR-1933](https://dsdmoj.atlassian.net/browse/IR-1933):
+Currently present:
 
-| File | What it isolates |
+| File | Why it is here |
 |---|---|
-| `incident-report-live-min.json` | `incident-report-live` with the row-level policy, filters and filter datasets removed |
-| `incident-report-live-policy.json` | the same, with only the row-level caseload policy added back |
-
-Note that `incident-report-live-min.json` has **no row-level caseload policy**, so
-it shows every establishment to anyone holding the report role. That is the point
-of it, and it is also why it must not reach production.
+| `incident-report-live.json` | Proof that a report can read live IRS data alongside the datamart ([IR-1927](https://dsdmoj.atlassian.net/browse/IR-1927)). Kept out of production until reading live IRS data from production has been tested and agreed. |
 
 ## Validation 
 
