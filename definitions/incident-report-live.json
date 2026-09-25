@@ -1,7 +1,7 @@
 {
   "id": "incident-report-live",
   "name": "Incident Reports (live IRS data)",
-  "description": "Experiment: the incident report summary reading recent incidents straight from the live Incident Reporting service, and older ones from the datamart copy, which currently runs 1-2 days behind.",
+  "description": "The incident report summary, with the most recent incidents read directly from the Incident Reporting service so they appear straight away.",
   "metadata": {
     "author": "Michael Willis",
     "version": "1.0.0",
@@ -237,7 +237,7 @@
     {
       "id": "summary",
       "name": "Incident report summary (live IRS data)",
-      "description": "<strong>Experimental.</strong> Same report as Incident report summary, but incidents from the last 7 days are read live from the Incident Reporting service rather than the datamart, so recent incidents appear immediately instead of 1-2 days later.<br>Lists all incidents by dates, incident types, report status and establishments.<br>\nProvides reporting officer details and any prisoner involvement.<br>\nDoes not include any protected characteristics or sentence details.<br>\nFor users of the following NOMIS reports: <ul>\n<li>INC0001 - MIS Incidents by Area & Establishment</li>\n<li>INC0009 - MIS Incidents Extract</li>\n<li>INC0014 - MIS Incident Extract (HQ)</li>\n<li>INC0028 - MIS Incidents for an Establishment by Incident Type For a Date Range</li>\n<li>HQ9000 - MIS Incident Details by Area</li>\n<li>MIS I2T Incident Extract</li>\n</ul>",
+      "description": "Same report as Incident report summary, but incidents reported in the last 7 days are read directly from the Incident Reporting service, so new incidents appear straight away rather than after the usual reporting delay.<br>Lists all incidents by dates, incident types, report status and establishments.<br>\nProvides reporting officer details and any prisoner involvement.<br>\nDoes not include any protected characteristics or sentence details.<br>\nFor users of the following NOMIS reports: <ul>\n<li>INC0001 - MIS Incidents by Area & Establishment</li>\n<li>INC0009 - MIS Incidents Extract</li>\n<li>INC0014 - MIS Incident Extract (HQ)</li>\n<li>INC0028 - MIS Incidents for an Establishment by Incident Type For a Date Range</li>\n<li>HQ9000 - MIS Incident Details by Area</li>\n<li>MIS I2T Incident Extract</li>\n</ul>",
       "version": "1.0.0",
       "dataset": "$ref:summary",
       "render": "HTML",
