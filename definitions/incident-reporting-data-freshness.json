@@ -49,7 +49,7 @@
       "name": "Datamart freshness against live IRS",
       "description": "Two rows: the live Incident Reporting service and the datamart copy, with the lag of the datamart behind live.",
       "datasource": "athena",
-      "query": "WITH sources AS (SELECT 1 AS sort_order, 'Live IRS (source of truth)' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM dps_inc_reporting.public.report UNION ALL SELECT 2 AS sort_order, 'Datamart' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM AwsDataCatalog.prisons.incidentreporting_report), compared AS (SELECT sort_order, source, latest_created_at, latest_reference, report_count, MAX(CASE WHEN sort_order = 1 THEN latest_created_at END) OVER () AS live_created_at, MAX(CASE WHEN sort_order = 1 THEN report_count END) OVER () AS live_report_count FROM sources), lagged AS (SELECT sort_order, source, latest_created_at, latest_reference, report_count, CASE WHEN sort_order = 1 THEN NULL ELSE date_diff('minute', latest_created_at, live_created_at) END AS lag_minutes, CASE WHEN sort_order = 1 THEN NULL ELSE live_report_count - report_count END AS missing_reports FROM compared) SELECT sort_order, source, latest_created_at, latest_reference, report_count, lag_minutes, CASE WHEN lag_minutes IS NULL THEN 'n/a' WHEN lag_minutes < 60 THEN format('%s min', lag_minutes) WHEN lag_minutes < 1440 THEN format('%s hr', lag_minutes / 60) ELSE format('%s day%s %s hr', lag_minutes / 1440, CASE WHEN lag_minutes / 1440 = 1 THEN '' ELSE 's' END, (lag_minutes % 1440) / 60) END AS behind_by, missing_reports, CASE WHEN lag_minutes IS NULL THEN 'Source' WHEN lag_minutes < 60 THEN 'Up to date' WHEN lag_minutes < 1440 THEN 'Behind by less than a day' ELSE 'Behind' END AS freshness_status, CAST(current_timestamp AS timestamp) AS checked_at FROM lagged ORDER BY sort_order",
+      "query": "WITH sources AS (SELECT 1 AS sort_order, 'Live IRS (source of truth)' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM dps_inc_reporting.public.report UNION ALL SELECT 2 AS sort_order, 'Datamart' AS source, MAX(created_at) AS latest_created_at, MAX(CAST(report_reference AS BIGINT)) AS latest_reference, COUNT(*) AS report_count FROM AwsDataCatalog.prisons.incidentreporting_report), compared AS (SELECT sort_order, source, latest_created_at, latest_reference, report_count, MAX(CASE WHEN sort_order = 1 THEN latest_created_at END) OVER () AS live_created_at, MAX(CASE WHEN sort_order = 1 THEN report_count END) OVER () AS live_report_count FROM sources), lagged AS (SELECT sort_order, source, latest_created_at, latest_reference, report_count, CASE WHEN sort_order = 1 THEN NULL ELSE date_diff('minute', latest_created_at, live_created_at) END AS lag_minutes, CASE WHEN sort_order = 1 THEN NULL ELSE live_report_count - report_count END AS missing_reports FROM compared) SELECT sort_order, source, latest_created_at, latest_reference, report_count, lag_minutes, CASE WHEN lag_minutes IS NULL THEN 'n/a' WHEN lag_minutes < 60 THEN format('%s min', lag_minutes) WHEN lag_minutes < 1440 THEN format('%s hr', lag_minutes / 60) ELSE format('%s day%s %s hr', lag_minutes / 1440, CASE WHEN lag_minutes / 1440 = 1 THEN '' ELSE 's' END, (lag_minutes % 1440) / 60) END AS behind_by, missing_reports, CASE WHEN lag_minutes IS NULL THEN 'Source' WHEN lag_minutes < 60 THEN 'Up to date' WHEN lag_minutes < 1440 THEN 'Behind by less than a day' ELSE 'Behind' END AS freshness_status, format_datetime(current_timestamp AT TIME ZONE 'Europe/London', 'dd/MM/yyyy HH:mm') AS checked_at FROM lagged ORDER BY sort_order",
       "schema": {
         "field": [
           {
@@ -99,7 +99,7 @@
           },
           {
             "name": "checked_at",
-            "type": "datetime",
+            "type": "string",
             "display": "Checked at"
           }
         ]
@@ -192,8 +192,7 @@
           {
             "name": "$ref:checked_at",
             "display": "Checked at",
-            "formula": "format_date(${checked_at}, 'dd/MM/yyyy HH:mm')",
-            "type": "datetime",
+            "type": "string",
             "visible": "true",
             "sortable": false,
             "defaultsort": false
