@@ -275,6 +275,106 @@
           }
         ]
       }
+    },
+    {
+      "id": "by-location-per-week",
+      "name": "Count of incidents per location per week",
+      "datasource": "athena",
+      "query": "SELECT CAST(date_trunc('week', r.incident_date_and_time) AS DATE) AS start_date, format_datetime(min(r.incident_date_and_time), 'dd/MM/yyyy') AS min_date, format_datetime(max(r.incident_date_and_time), 'dd/MM/yyyy') AS max_date, r.location, p.name AS location_name, al.noms_region_code AS region_code, area.description AS region_name, ctf.code AS type, ctf.description AS type_description, count(*) AS num_of_incidents FROM dps_inc_reporting.public.report r JOIN dps_inc_reporting.public.constant_status cs ON r.status = cs.code JOIN dps_inc_reporting.public.constant_type ct ON r.type = ct.code JOIN dps_inc_reporting.public.constant_type_family ctf ON ctf.code = ct.family_code JOIN AwsDataCatalog.prisons.prisonregister_prison p ON p.prison_id = r.location JOIN AwsDataCatalog.prisons.nomis_agency_locations al ON al.agy_loc_id = p.prison_id LEFT JOIN AwsDataCatalog.prisons.nomis_areas area ON area.area_class = 'REGION' AND area.area_code = al.noms_region_code WHERE r.status NOT IN ('DUPLICATE', 'NOT_REPORTABLE', 'DRAFT') GROUP BY 1, r.location, p.name, al.noms_region_code, area.description, ctf.code, ctf.description",
+      "schema": {
+        "field": [
+          {
+            "name": "start_date",
+            "type": "date"
+          },
+          {
+            "name": "min_date",
+            "type": "date"
+          },
+          {
+            "name": "max_date",
+            "type": "date"
+          },
+          {
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "name": "location_name",
+            "type": "string"
+          },
+          {
+            "name": "region_code",
+            "type": "string"
+          },
+          {
+            "name": "region_name",
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "type_description",
+            "type": "string"
+          },
+          {
+            "name": "num_of_incidents",
+            "type": "long"
+          }
+        ]
+      }
+    },
+    {
+      "id": "by-location-per-month",
+      "name": "Count of incidents per location per month",
+      "datasource": "athena",
+      "query": "SELECT CAST(date_trunc('month', r.incident_date_and_time) AS DATE) AS start_date, format_datetime(min(r.incident_date_and_time), 'dd/MM/yyyy') AS min_date, format_datetime(max(r.incident_date_and_time), 'dd/MM/yyyy') AS max_date, r.location, p.name AS location_name, al.noms_region_code AS region_code, area.description AS region_name, ctf.code AS type, ctf.description AS type_description, count(*) AS num_of_incidents FROM dps_inc_reporting.public.report r JOIN dps_inc_reporting.public.constant_status cs ON r.status = cs.code JOIN dps_inc_reporting.public.constant_type ct ON r.type = ct.code JOIN dps_inc_reporting.public.constant_type_family ctf ON ctf.code = ct.family_code JOIN AwsDataCatalog.prisons.prisonregister_prison p ON p.prison_id = r.location JOIN AwsDataCatalog.prisons.nomis_agency_locations al ON al.agy_loc_id = p.prison_id LEFT JOIN AwsDataCatalog.prisons.nomis_areas area ON area.area_class = 'REGION' AND area.area_code = al.noms_region_code WHERE r.status NOT IN ('DUPLICATE', 'NOT_REPORTABLE', 'DRAFT') GROUP BY 1, r.location, p.name, al.noms_region_code, area.description, ctf.code, ctf.description",
+      "schema": {
+        "field": [
+          {
+            "name": "start_date",
+            "type": "date"
+          },
+          {
+            "name": "min_date",
+            "type": "date"
+          },
+          {
+            "name": "max_date",
+            "type": "date"
+          },
+          {
+            "name": "location",
+            "type": "string"
+          },
+          {
+            "name": "location_name",
+            "type": "string"
+          },
+          {
+            "name": "region_code",
+            "type": "string"
+          },
+          {
+            "name": "region_name",
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "type": "string"
+          },
+          {
+            "name": "type_description",
+            "type": "string"
+          },
+          {
+            "name": "num_of_incidents",
+            "type": "long"
+          }
+        ]
+      }
     }
   ],
   "report": [
@@ -607,6 +707,244 @@
             "visible": "true",
             "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${filter_date}&toDate=${filter_date}&location=${location}&typeFamily=${type}',${num_of_incidents},TRUE)",
             "defaultsort": false
+          }
+        ]
+      },
+      "destination": []
+    },
+    {
+      "id": "by-location-per-week",
+      "name": "Week and location reports (live data)",
+      "description": "Trial: reads live Incident Reporting data. Same report as Week and location reports, but every incident is read directly from the Incident Reporting service, so it is always up to date and is not affected when the reporting datamart falls behind. Visible to data wardens only while it is being trialled.<br>Lists number of incidents by type and establishment for each week.<br>\nFor users of the following NOMIS reports: <ul>\n<li>INC0001 - MIS Incidents by Area and Establishment</li>\n<li>INC0006 - MIS Incidents by Incident Type & Month</li>\n<li>HQ0005 - MIS HQ SPU Incidents by Incident Type</li>\n<li>HQ0006 - MIS HQ SPU Incidents by Incident Type Start and End Date</li>\n</ul>",
+      "version": "1.0.0",
+      "dataset": "$ref:by-location-per-week",
+      "render": "HTML",
+      "feature": [
+        {
+          "type": "print"
+        }
+      ],
+      "metadata": {
+        "hints": [
+          "interactive"
+        ]
+      },
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:start_date",
+            "display": "Date of incident",
+            "formula": "format_date(${start_date}, 'dd/MM/yyyy')",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": true,
+            "sortdirection": "desc",
+            "filter": {
+              "type": "daterange",
+              "default": "today(-1,months) - today()"
+            }
+          },
+          {
+            "name": "$ref:type",
+            "display": "Type code",
+            "sortable": false,
+            "visible": "false",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "dynamicoptions": {
+                "maximumOptions": 60,
+                "returnAsStaticOptions": true,
+                "dataset": "types",
+                "name": "code",
+                "display": "description"
+              }
+            }
+          },
+          {
+            "name": "$ref:type_description",
+            "display": "Incident type",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:location",
+            "display": "Location",
+            "sortable": true,
+            "visible": "false",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "mandatory": false,
+              "dynamicoptions": {
+                "maximumOptions": 140,
+                "returnAsStaticOptions": true,
+                "dataset": "prisons",
+                "name": "prison_id",
+                "display": "prison_name"
+              }
+            }
+          },
+          {
+            "name": "$ref:location_name",
+            "display": "Location name",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:region_code",
+            "display": "Region",
+            "sortable": true,
+            "visible": "false",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "mandatory": false,
+              "dynamicoptions": {
+                "maximumOptions": 20,
+                "returnAsStaticOptions": true,
+                "dataset": "regionCodes",
+                "name": "code",
+                "display": "description"
+              }
+            }
+          },
+          {
+            "name": "$ref:region_name",
+            "display": "Region name",
+            "sortable": true,
+            "visible": "false",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_of_incidents",
+            "display": "Incidents/Week",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${min_date}&toDate=${max_date}&location=${location}&typeFamily=${type}',${num_of_incidents},TRUE)"
+          }
+        ]
+      },
+      "destination": []
+    },
+    {
+      "id": "by-location-per-month",
+      "name": "Month and location reports (live data)",
+      "description": "Trial: reads live Incident Reporting data. Same report as Month and location reports, but every incident is read directly from the Incident Reporting service, so it is always up to date and is not affected when the reporting datamart falls behind. Visible to data wardens only while it is being trialled.<br>Lists number of incidents by type and establishment for each month.<br>\nFor users of the following NOMIS reports: <ul>\n<li>INC0001 - MIS Incidents by Area and Establishment</li>\n<li>INC0006 - MIS Incidents by Incident Type & Month</li>\n<li>HQ0005 - MIS HQ SPU Incidents by Incident Type</li>\n<li>HQ0006 - MIS HQ SPU Incidents by Incident Type Start and End Date</li>\n</ul>",
+      "version": "1.0.0",
+      "dataset": "$ref:by-location-per-month",
+      "render": "HTML",
+      "feature": [
+        {
+          "type": "print"
+        }
+      ],
+      "metadata": {
+        "hints": [
+          "interactive"
+        ]
+      },
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:start_date",
+            "display": "Month of incident",
+            "formula": "format_date(${start_date}, 'MMM-yyyy')",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": true,
+            "sortdirection": "desc",
+            "filter": {
+              "type": "daterange",
+              "default": "today(-3,months) - today()"
+            }
+          },
+          {
+            "name": "$ref:type",
+            "display": "Type code",
+            "sortable": false,
+            "visible": "false",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "dynamicoptions": {
+                "maximumOptions": 60,
+                "returnAsStaticOptions": true,
+                "dataset": "types",
+                "name": "code",
+                "display": "description"
+              }
+            }
+          },
+          {
+            "name": "$ref:type_description",
+            "display": "Incident type",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:location",
+            "display": "Location",
+            "sortable": true,
+            "visible": "false",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "mandatory": false,
+              "dynamicoptions": {
+                "maximumOptions": 140,
+                "returnAsStaticOptions": true,
+                "dataset": "prisons",
+                "name": "prison_id",
+                "display": "prison_name"
+              }
+            }
+          },
+          {
+            "name": "$ref:location_name",
+            "display": "Location name",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:region_code",
+            "display": "Region",
+            "sortable": true,
+            "visible": "false",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "mandatory": false,
+              "dynamicoptions": {
+                "maximumOptions": 20,
+                "returnAsStaticOptions": true,
+                "dataset": "regionCodes",
+                "name": "code",
+                "display": "description"
+              }
+            }
+          },
+          {
+            "name": "$ref:region_name",
+            "display": "Region name",
+            "sortable": true,
+            "visible": "false",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_of_incidents",
+            "display": "Incidents/month",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${min_date}&toDate=${max_date}&location=${location}&typeFamily=${type}',${num_of_incidents},TRUE)"
           }
         ]
       },
