@@ -70,13 +70,14 @@ jobs:
 
       - name: Upload DPDs
         run: |
-          # definitions/experimental/ holds throwaway variants used to diagnose
-          # DPR-side problems. They are useful in the lower environments and must
-          # never reach production, so they are excluded there.
+          # An experimental/ folder (at any level, e.g. definitions/irs/experimental/)
+          # holds throwaway variants used to diagnose DPR-side problems. They are
+          # useful in the lower environments and must never reach production, so
+          # they are excluded there. In aws s3 sync patterns, * also matches "/".
           EXCLUDE=()
           if [ "${{ inputs.deployEnv }}" = "production" ]; then
-            EXCLUDE=(--exclude "experimental/*")
-            echo "::notice::Production deploy - excluding definitions/experimental/"
+            EXCLUDE=(--exclude "experimental/*" --exclude "*/experimental/*")
+            echo "::notice::Production deploy - excluding every experimental/ folder"
           fi
 
           aws s3 sync definitions/ \
