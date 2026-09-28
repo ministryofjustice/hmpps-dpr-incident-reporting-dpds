@@ -1,9 +1,25 @@
 # hmpps-dpr-incident-reporting-dpds
 
-Data Product Definitions for incident-reporting.
+Data Product Definitions (DPR reports) for the services owned by the Manage Safety team. Despite the
+repo name, it is not only for incident reporting.
 
-DPD JSON files live under `definitions/` and are published to S3 by
+DPD JSON files live under `definitions/`, one folder per service, and are published to S3 by
 [`.github/workflows/publish-dpds.yml`](.github/workflows/publish-dpds.yml).
+
+| Folder | Service |
+|---|---|
+| `definitions/irs/` | Incident Reporting |
+
+Add a folder when a service gets its first report, for example `non-associations`, `incentives`,
+`adjudications`, `csip` or `use-of-force`.
+
+Everything under `definitions/` is published to one S3 folder, `incident-reporting/`, and DPR builds
+each report id from that folder name and the file's `id`, not from the file's path. So:
+
+- every published report id starts `incident-reporting_`, whichever service folder it is in
+- a file's `id` must be unique across the whole repo, not just within its folder
+- moving a file between folders does not change its report id, but the old copy stays in S3 until it
+  is deleted (see [Delete](#delete)), leaving two definitions with the same id
 
 ## Publish
 
@@ -14,15 +30,17 @@ The reports/dashboards appear in the prisons and probation reporting platforms u
 publication. The reporting service caches its list of reports for 30 minutes, so a new report returns
 an error until that cache expires.
 
-The published report id is the file's `id` prefixed with the folder name, e.g.
+The published report id is the file's `id` prefixed with `incident-reporting_`, e.g.
 `incident-reporting_incident-report-live`.
+
 Platform links for the development environment:
 https://digital-prison-reporting-mi-ui-dev.hmpps.service.justice.gov.uk/
 https://hmpps-probation-mi-ui-dev.hmpps.service.justice.gov.uk
 
-## `definitions/experimental/`
+## `experimental/` folders
 
-Throwaway DPDs used to diagnose problems — usually by stripping parts of a real
+A service folder can have an `experimental/` subfolder, e.g. `definitions/irs/experimental/`, for
+throwaway DPDs used to diagnose problems, usually by stripping parts of a real
 definition until a failure goes away. They are published to the lower
 environments like anything else, but the publish workflow **excludes them from
 production**.
@@ -44,7 +62,7 @@ Every live-data report follows these conventions.
 
 | | |
 |---|---|
-| File | `definitions/<source id>-live.json`, one per source definition |
+| File | `definitions/irs/<source id>-live.json`, one per source definition |
 | Label | Product and report names end "(live data)". Descriptions start "Trial: reads live Incident Reporting data." |
 | Access | `INCIDENT_REPORTS__APPROVE` only (the data warden role). Keep the source's row-level caseload policy. |
 | Datasource | `athena`: catalog `AwsDataCatalog`, database `reports`, dialect `athena/3` |
@@ -108,3 +126,5 @@ SCHEMA_LOCATION=$PWD/schema.json npm run validate
 ## Delete
 You can delete published DPDs by running the [`.github/workflows/delete-dpds.yml`](.github/workflows/delete-dpds.yml).
 This will remove the DPDs from S3, but they will still remain present in the GitHub repo.
+
+`fileNames` takes paths relative to `definitions/`, e.g. `irs/incident-report-live.json`.
