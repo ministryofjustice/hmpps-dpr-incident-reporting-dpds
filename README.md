@@ -104,6 +104,14 @@ Reference data is not in the Incident Reporting database, so it stays on the dat
   unfiltered test run can pass and users still hit it. Either use a `LEFT JOIN`, or wrap both sides:
   `ON lower(CAST(r.id AS varchar)) = lower(CAST(pi.report_id AS varchar))`. A plain `CAST` does
   not help, because Athena removes it; `lower()` stops the push-down.
+- **Joining a live column to a large datamart table can silently drop rows.** Athena narrows the
+  live table using the smallest and largest value from the datamart side, and Postgres then applies
+  that range using its own sort order, which ignores punctuation. `nomis_agency_locations` starts
+  with `*ALL*`, which Postgres sorts after `ACI`, so every incident at Altcourse (ACI) and Askham
+  Grange (AGI) disappeared from the PECS report, with no error. Wrap the live side in a function
+  that leaves the value unchanged, e.g. `ON al.agy_loc_id = upper(r.location)`, and always compare
+  totals with the datamart version. The small prison register is safe: Athena sends it as an exact
+  list rather than a range.
 - Policy SQL runs inside Athena, so any table it names must be fully qualified.
 - The DPR Tools test rig rejects some keys the schema allows (`metadata.tags`, `dataset.description`,
   `type` on report fields, `wordwrap`, and `formula` on dashboard measures). Remove them from the copy you upload to the rig, not from the
