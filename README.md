@@ -62,7 +62,7 @@ Every live-data report follows these conventions.
 
 | | |
 |---|---|
-| File | `definitions/irs/<source id>-live.json`, one per source definition |
+| File | `definitions/irs/<source file name>-live.json`, one per source definition, with the same `id` (e.g. `incident-status-tracker.json`, id `inc002`, becomes `incident-status-tracker-live.json`, id `incident-status-tracker-live`) |
 | Label | Product and report names end "(live data)". Descriptions start "Trial: reads live Incident Reporting data." |
 | Access | `INCIDENT_REPORTS__APPROVE` only (the data warden role). Keep the source's row-level caseload policy. |
 | Datasource | `athena`: catalog `AwsDataCatalog`, database `reports`, dialect `athena/3` |
@@ -106,7 +106,7 @@ Reference data is not in the Incident Reporting database, so it stays on the dat
   not help, because Athena removes it; `lower()` stops the push-down.
 - Policy SQL runs inside Athena, so any table it names must be fully qualified.
 - The DPR Tools test rig rejects some keys the schema allows (`metadata.tags`, `dataset.description`,
-  `type` on report fields, `wordwrap`). Remove them from the copy you upload to the rig, not from the
+  `type` on report fields, `wordwrap`, and `formula` on dashboard measures). Remove them from the copy you upload to the rig, not from the
   committed file.
 - A query Athena rejects leaves nothing in Athena query history. Look in App Insights
   (`exceptions` for `hmpps-dpr-tools-api`) for the reason.
