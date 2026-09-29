@@ -97,9 +97,13 @@ Reference data is not in the Incident Reporting database, so it stays on the dat
 
 ### Traps
 
-- Never inner-join the live `report.id` (a Postgres `uuid`) to a text column. Athena pushes a range
-  filter down to Postgres, which fails with `operator does not exist: uuid >= character varying`.
-  A `LEFT JOIN` is safe.
+- Take care joining on the live `uuid` columns (`report.id` and every `report_id`). Athena presents
+  them as text, and on an inner join it can push a range filter on them down to Postgres, which
+  fails with `operator does not exist: uuid >= character varying`. This happens **even when both
+  tables are live**, and only when a filter is selective (one prison, or a caseload), so an
+  unfiltered test run can pass and users still hit it. Either use a `LEFT JOIN`, or wrap both sides:
+  `ON lower(CAST(r.id AS varchar)) = lower(CAST(pi.report_id AS varchar))`. A plain `CAST` does
+  not help, because Athena removes it; `lower()` stops the push-down.
 - Policy SQL runs inside Athena, so any table it names must be fully qualified.
 - The DPR Tools test rig rejects some keys the schema allows (`metadata.tags`, `dataset.description`,
   `type` on report fields, `wordwrap`). Remove them from the copy you upload to the rig, not from the
