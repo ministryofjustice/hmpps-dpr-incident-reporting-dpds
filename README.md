@@ -113,9 +113,11 @@ Reference data is not in the Incident Reporting database, so it stays on the dat
   totals with the datamart version. The small prison register is safe: Athena sends it as an exact
   list rather than a range.
 - Policy SQL runs inside Athena, so any table it names must be fully qualified.
-- The DPR Tools test rig rejects some keys the schema allows (`metadata.tags`, `dataset.description`,
-  `type` on report fields, `wordwrap`, and `formula` on dashboard measures). Remove them from the copy you upload to the rig, not from the
-  committed file.
+- The DPR Tools test rig rejects some keys the schema allows: `type` on report fields and `formula`
+  on dashboard measures. Remove them from the copy you upload to the rig, not from the committed
+  file. Library 18.1.1 fixed `metadata.tags`, `dataset.description` and `wordwrap`, but a rig
+  running an older tools API still rejects those too. Check the version at
+  `https://dpr-tools-api-<env>.hmpps.service.justice.gov.uk/info`.
 - A query Athena rejects leaves nothing in Athena query history. Look in App Insights
   (`exceptions` for `hmpps-dpr-tools-api`) for the reason.
 
