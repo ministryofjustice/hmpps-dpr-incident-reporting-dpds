@@ -1,0 +1,634 @@
+{
+  "id": "adjudications-metrics",
+  "name": "Adjudications metrics (live data)",
+  "description": "Reports providing various metrics relating to the adjudications service.",
+  "metadata": {
+    "author": "Josh Jones",
+    "version": "1.0.0",
+    "owner": "Managing Safety",
+    "tags": [
+      "DPS",
+      "Adjudications"
+    ]
+  },
+  "datasource": [
+    {
+      "id": "athena",
+      "name": "athena",
+      "database": "reports",
+      "catalog": "AwsDataCatalog",
+      "connection": "awsdatacatalog",
+      "dialect": "athena/3"
+    },
+    {
+      "id": "datamart",
+      "name": "datamart"
+    }
+  ],
+  "policy": [
+    {
+      "id": "access",
+      "type": "access",
+      "rule": [
+        {
+          "effect": "permit",
+          "condition": [
+            {
+              "match": [
+                "${role}",
+                "INCIDENT_REPORTS__STATS"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "dataset": [
+    {
+      "id": "punishment-statistics",
+      "name": "Punishment statistics / location",
+      "datasource": "athena",
+      "query": "select\n    CAST(date_trunc('month', p.create_datetime) AS DATE) AS month,\n    to_char(MIN(p.create_datetime), 'DD/MM/YYYY') AS min_date,\n    to_char(MAX(p.create_datetime), 'DD/MM/YYYY') AS max_date,\n    COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n    count(distinct(reported_adjudication_fk_id)) as adjudications,\n    count(id) as puns,\n    count(id) filter ( where suspended_until is null ) as unsuspended_puns,\n    count(id) filter ( where suspended_until is not null ) as suspended_puns,\n    count(id) filter ( where consecutive_to_charge_number is not null ) as consecutive_puns,\n    count(id) filter ( where type = 'CAUTION' ) as cautions,\n    count(id) filter ( where type = 'CONFINEMENT' ) as confinements,\n    count(id) filter ( where type = 'PRIVILEGE' ) as privilege,\n    count(id) filter ( where type = 'DAMAGES_OWED' ) as damages_owed,\n    count(id) filter ( where type = 'EARNINGS' ) as earnings,\n    count(id) filter ( where type = 'PAYBACK' ) as payback,\n    count(id) filter ( where type = 'ADDITIONAL_DAYS' ) as add_days_added,\n    count(id) filter ( where type = 'PROSPECTIVE_DAYS' ) as pros_days_added,\n    count(id) filter ( where type = 'LOSS_OF_SOCIAL_VISITS' ) as loss_social_visits,\n    count(id) filter ( where type = 'RESTRICTION_OF_SOCIAL_VISITS' ) as res_social_visits,\n    count(id) filter ( where type = 'EXCLUSION_WORK' ) as exclusion_work,\n    count(id) filter ( where type = 'EXTRA_WORK' ) as extra_work,\n    count(id) filter ( where type = 'REMOVAL_ACTIVITY' ) as removal_activity,\n    count(id) filter ( where type = 'REMOVAL_WING' ) as removal_wing\nfrom dps_adjudications.public.punishment as p\nleft join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\non p.reported_adjudication_fk_id = ra.ra_id\nwhere p.deleted is null\ngroup by 1, ROLLUP(ra.originating_agency_id)",
+      "schema": {
+        "field": [
+          {
+            "name": "month",
+            "type": "date"
+          },
+          {
+            "name": "min_date",
+            "type": "date"
+          },
+          {
+            "name": "max_date",
+            "type": "date"
+          },
+          {
+            "name": "location_id",
+            "type": "string"
+          },
+          {
+            "name": "adjudications",
+            "type": "long"
+          },
+          {
+            "name": "puns",
+            "type": "long"
+          },
+          {
+            "name": "unsuspended_puns",
+            "type": "long"
+          },
+          {
+            "name": "suspended_puns",
+            "type": "long"
+          },
+          {
+            "name": "consecutive_puns",
+            "type": "long"
+          },
+          {
+            "name": "cautions",
+            "type": "long"
+          },
+          {
+            "name": "confinements",
+            "type": "long"
+          },
+          {
+            "name": "privilege",
+            "type": "long"
+          },
+          {
+            "name": "damages_owed",
+            "type": "long"
+          },
+          {
+            "name": "earnings",
+            "type": "long"
+          },
+          {
+            "name": "payback",
+            "type": "long"
+          },
+          {
+            "name": "add_days_added",
+            "type": "long"
+          },
+          {
+            "name": "pros_days_added",
+            "type": "long"
+          },
+          {
+            "name": "loss_social_visits",
+            "type": "long"
+          },
+          {
+            "name": "res_social_visits",
+            "type": "long"
+          },
+          {
+            "name": "exclusion_work",
+            "type": "long"
+          },
+          {
+            "name": "extra_work",
+            "type": "long"
+          },
+          {
+            "name": "removal_activity",
+            "type": "long"
+          },
+          {
+            "name": "removal_wing",
+            "type": "long"
+          }
+        ]
+      }
+    },
+    {
+      "id": "privilege-punishments",
+      "name": "Privilege Punishments / location",
+      "datasource": "athena",
+      "query": "select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year,\n       format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n COALESCE(privilege_type, 'All privilege types') as privilege_type,\n       count(id) as num_ada_puns,\n       ROUND(avg(duration), 1) as avg_days_added,\n       max(duration) as max_days_added,\n       count(CASE WHEN duration > 42 THEN id END) as num_over_42_days_added\nfrom dps_adjudications.public.punishment as p\n left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n           on p.id = ps.punishment_fk_id\n left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n           on p.reported_adjudication_fk_id = ra.ra_id\nwhere deleted is null and type = 'PRIVILEGE'\ngroup by 1, ROLLUP(ra.originating_agency_id), ROLLUP(privilege_type)",
+      "schema": {
+        "field": [
+          {
+            "name": "month_year",
+            "type": "date"
+          },
+          {
+            "name": "min_date",
+            "type": "date"
+          },
+          {
+            "name": "max_date",
+            "type": "date"
+          },
+          {
+            "name": "location_id",
+            "type": "string"
+          },
+          {
+            "name": "privilege_type",
+            "type": "string"
+          },
+          {
+            "name": "num_ada_puns",
+            "type": "long"
+          },
+          {
+            "name": "avg_days_added",
+            "type": "long"
+          },
+          {
+            "name": "max_days_added",
+            "type": "long"
+          },
+          {
+            "name": "num_over_42_days_added",
+            "type": "long"
+          }
+        ]
+      }
+    },
+    {
+      "id": "additional-days-added-punishments",
+      "name": "Additional days added / location",
+      "datasource": "athena",
+      "query": "select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year,\n       format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n       count(id) as num_ada_puns,\n       ROUND(avg(duration), 1) as avg_days_added,\n       max(duration) as max_days_added,\n       count(CASE WHEN duration > 42 THEN id END) as num_over_42_days_added\nfrom dps_adjudications.public.punishment as p\n left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n           on p.id = ps.punishment_fk_id\n left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n           on p.reported_adjudication_fk_id = ra.ra_id\nwhere deleted is null and type = 'PRIVILEGE'\ngroup by 1, ROLLUP(ra.originating_agency_id)",
+      "schema": {
+        "field": [
+          {
+            "name": "month_year",
+            "type": "date"
+          },
+          {
+            "name": "min_date",
+            "type": "date"
+          },
+          {
+            "name": "max_date",
+            "type": "date"
+          },
+          {
+            "name": "location_id",
+            "type": "string"
+          },
+          {
+            "name": "num_ada_puns",
+            "type": "long"
+          },
+          {
+            "name": "avg_days_added",
+            "type": "long"
+          },
+          {
+            "name": "max_days_added",
+            "type": "long"
+          },
+          {
+            "name": "num_over_42_days_added",
+            "type": "long"
+          }
+        ]
+      }
+    },
+
+    {
+      "id": "prisons",
+      "name": "Prisons",
+      "datasource": "datamart",
+      "query": "select prison_id, name prison_name FROM prisons.prisonregister_prison p where p.active = true \nUNION ALL SELECT 'All locations' as prison_id, 'All locations' as name",
+      "schema": {
+        "field": [
+          {
+            "name": "prison_id",
+            "display": "Prison Id",
+            "type": "string"
+          },
+          {
+            "name": "prison_name",
+            "display": "Prison name",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "id": "privilege-types",
+      "name": "Privilege types",
+      "datasource": "athena",
+      "query": "select DISTINCT(privilege_type) as privilege_type FROM dps_adjudications.public.punishment\nUNION ALL SELECT 'All privilege types' as privilege_type",
+      "schema": {
+        "field": [
+          {
+            "name": "privilege_type",
+            "display": "Privilege type",
+            "type": "string"
+          }
+        ]
+      }
+    }
+  ],
+  "report": [
+    {
+      "id": "punishment-statistics",
+      "name": "Punishment statistics / location",
+      "description": "Breakdown of punishments counts by location",
+      "version": "1.0.0",
+      "dataset": "$ref:punishment-statistics",
+      "render": "HTML",
+      "feature": [
+        {
+          "type": "print"
+        }
+      ],
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:month",
+            "display": "Month when punishment created",
+            "formula": "format_date(${month}, 'MMM-yyyy')",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": true,
+            "sortdirection": "desc",
+            "filter": {
+              "type": "daterange",
+              "default": "today(-3,months) - today()"
+            }
+          },
+          {
+            "name": "$ref:location_id",
+            "display": "Location",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "interactive": true,
+              "dynamicoptions": {
+                "maximumOptions": 140,
+                "returnAsStaticOptions": true,
+                "dataset": "prisons",
+                "name": "prison_id",
+                "display": "prison_name"
+              }
+            }
+          },
+          {
+            "name": "$ref:adjudications",
+            "display": "Number of adjudications",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:puns",
+            "display": "Total punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:unsuspended_puns",
+            "display": "Punishments not suspended",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:suspended_puns",
+            "display": "Suspended punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:consecutive_puns",
+            "display": "Consecutive punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:cautions",
+            "display": "Cautions",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:confinements",
+            "display": "Confinements",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:privilege",
+            "display": "Privileges",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:damages_owed",
+            "display": "Damages owed",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:earnings",
+            "display": "Earnings",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:payback",
+            "display": "Paybacks",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:add_days_added",
+            "display": "Additional days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:pros_days_added",
+            "display": "Prospective days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:loss_social_visits",
+            "display": "Loss of social visits",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:res_social_visits",
+            "display": "Restriction of social visits",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:exclusion_work",
+            "display": "Exclusion work",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:extra_work",
+            "display": "Extra work",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:removal_activity",
+            "display": "Removal activity",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:removal_wing",
+            "display": "Removal wing",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          }
+        ]
+      },
+      "destination": []
+    },
+    {
+      "id": "privilege-punishments",
+      "name": "Privilege Punishments / location",
+      "description": "Privilege punishments by location",
+      "version": "1.0.0",
+      "dataset": "$ref:privilege-punishments",
+      "render": "HTML",
+      "feature": [
+        {
+          "type": "print"
+        }
+      ],
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:month_year",
+            "display": "Month when punishment created",
+            "formula": "format_date(${month_year}, 'MMM-yyyy')",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": true,
+            "sortdirection": "desc",
+            "filter": {
+              "type": "daterange",
+              "default": "today(-3,months) - today()"
+            }
+          },
+          {
+            "name": "$ref:location_id",
+            "display": "Location",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "interactive": true,
+              "dynamicoptions": {
+                "maximumOptions": 140,
+                "returnAsStaticOptions": true,
+                "dataset": "prisons",
+                "name": "prison_id",
+                "display": "prison_name"
+              }
+            }
+          },
+          {
+            "name": "$ref:privilege_type",
+            "display": "Privilege type",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "interactive": true,
+              "dynamicoptions": {
+                "maximumOptions": 60,
+                "returnAsStaticOptions": true,
+                "dataset": "privilege-types",
+                "name": "privilege_type",
+                "display": "privilege_type"
+              }
+            }
+          },
+          {
+            "name": "$ref:num_ada_puns",
+            "display": "Number of privilege punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:avg_days_added",
+            "display": "Average days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:max_days_added",
+            "display": "Maximum days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_over_42_days_added",
+            "display": "Number of punishments with over 42 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          }
+        ]
+      },
+      "destination": []
+    },
+    {
+      "id": "additional-days-added-punishments",
+      "name": "Additional days added punishments / location",
+      "description": "Additional days added by location",
+      "version": "1.0.0",
+      "dataset": "$ref:additional-days-added-punishments",
+      "render": "HTML",
+      "feature": [
+        {
+          "type": "print"
+        }
+      ],
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:month_year",
+            "display": "Month when punishment created",
+            "formula": "format_date(${month_year}, 'MMM-yyyy')",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": true,
+            "sortdirection": "desc",
+            "filter": {
+              "type": "daterange",
+              "default": "today(-3,months) - today()"
+            }
+          },
+          {
+            "name": "$ref:location_id",
+            "display": "Location",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "interactive": true,
+              "dynamicoptions": {
+                "maximumOptions": 140,
+                "returnAsStaticOptions": true,
+                "dataset": "prisons",
+                "name": "prison_id",
+                "display": "prison_name"
+              }
+            }
+          },
+          {
+            "name": "$ref:num_ada_puns",
+            "display": "Number of ADA punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:avg_days_added",
+            "display": "Average days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:max_days_added",
+            "display": "Maximum days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_over_42_days_added",
+            "display": "Number of punishments with over 42 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          }
+        ]
+      },
+      "destination": []
+    }
+  ]
+}
