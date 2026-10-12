@@ -49,7 +49,7 @@
       "id": "punishment-statistics",
       "name": "Punishment statistics / location",
       "datasource": "athena",
-      "query": "select\n    CAST(date_trunc('month', p.create_datetime) AS DATE) AS month,\n    to_char(MIN(p.create_datetime), 'DD/MM/YYYY') AS min_date,\n    to_char(MAX(p.create_datetime), 'DD/MM/YYYY') AS max_date,\n    COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n    count(distinct(reported_adjudication_fk_id)) as adjudications,\n    count(id) as puns,\n    count(id) filter ( where suspended_until is null ) as unsuspended_puns,\n    count(id) filter ( where suspended_until is not null ) as suspended_puns,\n    count(id) filter ( where consecutive_to_charge_number is not null ) as consecutive_puns,\n    count(id) filter ( where type = 'CAUTION' ) as cautions,\n    count(id) filter ( where type = 'CONFINEMENT' ) as confinements,\n    count(id) filter ( where type = 'PRIVILEGE' ) as privilege,\n    count(id) filter ( where type = 'DAMAGES_OWED' ) as damages_owed,\n    count(id) filter ( where type = 'EARNINGS' ) as earnings,\n    count(id) filter ( where type = 'PAYBACK' ) as payback,\n    count(id) filter ( where type = 'ADDITIONAL_DAYS' ) as add_days_added,\n    count(id) filter ( where type = 'PROSPECTIVE_DAYS' ) as pros_days_added,\n    count(id) filter ( where type = 'LOSS_OF_SOCIAL_VISITS' ) as loss_social_visits,\n    count(id) filter ( where type = 'RESTRICTION_OF_SOCIAL_VISITS' ) as res_social_visits,\n    count(id) filter ( where type = 'EXCLUSION_WORK' ) as exclusion_work,\n    count(id) filter ( where type = 'EXTRA_WORK' ) as extra_work,\n    count(id) filter ( where type = 'REMOVAL_ACTIVITY' ) as removal_activity,\n    count(id) filter ( where type = 'REMOVAL_WING' ) as removal_wing\nfrom dps_adjudications.public.punishment as p\nleft join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\non p.reported_adjudication_fk_id = ra.ra_id\nwhere p.deleted is null\ngroup by 1, ROLLUP(ra.originating_agency_id)",
+      "query": "select\n    CAST(date_trunc('month', p.create_datetime) AS DATE) AS month,\n    format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n    COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n    count(distinct(reported_adjudication_fk_id)) as adjudications,\n    count(id) as puns,\n    count(id) filter ( where suspended_until is null ) as unsuspended_puns,\n    count(id) filter ( where suspended_until is not null ) as suspended_puns,\n    count(id) filter ( where consecutive_to_charge_number is not null ) as consecutive_puns,\n    count(id) filter ( where type = 'CAUTION' ) as cautions,\n    count(id) filter ( where type = 'CONFINEMENT' ) as confinements,\n    count(id) filter ( where type = 'PRIVILEGE' ) as privilege,\n    count(id) filter ( where type = 'DAMAGES_OWED' ) as damages_owed,\n    count(id) filter ( where type = 'EARNINGS' ) as earnings,\n    count(id) filter ( where type = 'PAYBACK' ) as payback,\n    count(id) filter ( where type = 'ADDITIONAL_DAYS' ) as add_days_added,\n    count(id) filter ( where type = 'PROSPECTIVE_DAYS' ) as pros_days_added,\n    count(id) filter ( where type = 'LOSS_OF_SOCIAL_VISITS' ) as loss_social_visits,\n    count(id) filter ( where type = 'RESTRICTION_OF_SOCIAL_VISITS' ) as res_social_visits,\n    count(id) filter ( where type = 'EXCLUSION_WORK' ) as exclusion_work,\n    count(id) filter ( where type = 'EXTRA_WORK' ) as extra_work,\n    count(id) filter ( where type = 'REMOVAL_ACTIVITY' ) as removal_activity,\n    count(id) filter ( where type = 'REMOVAL_WING' ) as removal_wing\nfrom dps_adjudications.public.punishment as p\nleft join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\non p.reported_adjudication_fk_id = ra.ra_id\nwhere p.deleted is null\ngroup by 1, ROLLUP(ra.originating_agency_id)",
       "schema": {
         "field": [
           {
@@ -195,9 +195,9 @@
     },
     {
       "id": "additional-days-added-punishments",
-      "name": "Additional days added / location",
+      "name": "Days added / location",
       "datasource": "athena",
-      "query": "select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year,\n       format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n       count(id) as num_ada_puns,\n       ROUND(avg(duration), 1) as avg_days_added,\n       max(duration) as max_days_added,\n       count(CASE WHEN duration > 42 THEN id END) as num_over_42_days_added\nfrom dps_adjudications.public.punishment as p\n left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n           on p.id = ps.punishment_fk_id\n left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n           on p.reported_adjudication_fk_id = ra.ra_id\nwhere deleted is null and type = 'PRIVILEGE'\ngroup by 1, ROLLUP(ra.originating_agency_id)",
+      "query": "select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year, format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n       COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n       count(id) filter(where type = 'ADDITIONAL_DAYS') as num_ada_puns,\n       count(CASE WHEN duration > 42 AND type = 'ADDITIONAL_DAYS' THEN id END) as num_ada_over_42_days,\n       count(CASE WHEN duration BETWEEN 43 AND 63 AND type = 'ADDITIONAL_DAYS' THEN id END) as num_ada_between_43_63_days,\n       count(CASE WHEN duration BETWEEN 64 AND 74 AND type = 'ADDITIONAL_DAYS' THEN id END) as num_ada_between_64_74_days,\n       count(CASE WHEN duration > 74 AND type = 'ADDITIONAL_DAYS' THEN id END) as num_ada_more_than_74_days,\n       max(duration) filter(where type = 'ADDITIONAL_DAYS') as max_add_days_added,\n       count(id) filter(where type = 'PROSPECTIVE_DAYS') as num_pda_puns,\n       count(CASE WHEN duration > 42 AND type = 'PROSPECTIVE_DAYS' THEN id END) as num_pda_over_42_days,\n       count(CASE WHEN duration BETWEEN 43 AND 63 AND type = 'PROSPECTIVE_DAYS' THEN id END) as num_pda_between_43_63_days,\n       count(CASE WHEN duration BETWEEN 64 AND 74 AND type = 'PROSPECTIVE_DAYS' THEN id END) as num_pda_between_64_74_days,\n       count(CASE WHEN duration > 74 AND type = 'PROSPECTIVE_DAYS' THEN id END) as num_pda_more_than_74_days,\n       max(duration) filter(where type = 'PROSPECTIVE_DAYS') as max_pros_days_added\nfrom dps_adjudications.public.punishment as p\n    left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\non p.id = ps.punishment_fk_id\n    left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n    on p.reported_adjudication_fk_id = ra.ra_id\nwhere deleted is null\ngroup by 1, ROLLUP(ra.originating_agency_id)",
       "schema": {
         "field": [
           {
@@ -221,21 +221,188 @@
             "type": "long"
           },
           {
-            "name": "avg_days_added",
+            "name": "num_ada_over_42_days",
             "type": "long"
           },
           {
-            "name": "max_days_added",
+            "name": "num_ada_between_43_63_days",
             "type": "long"
           },
           {
-            "name": "num_over_42_days_added",
+            "name": "num_ada_between_64_74_days",
+            "type": "long"
+          },
+          {
+            "name": "num_ada_more_than_74_days",
+            "type": "long"
+          },
+          {
+            "name": "max_add_days_added",
+            "type": "long"
+          },
+          {
+            "name": "num_pda_puns",
+            "type": "long"
+          },
+          {
+            "name": "num_pda_over_42_days",
+            "type": "long"
+          },
+          {
+            "name": "num_pda_between_43_63_days",
+            "type": "long"
+          },
+          {
+            "name": "num_pda_between_64_74_days",
+            "type": "long"
+          },
+          {
+            "name": "num_pda_more_than_74_days",
+            "type": "long"
+          },
+          {
+            "name": "max_pros_days_added",
             "type": "long"
           }
         ]
       }
     },
-
+    {
+      "id": "visits-punishments",
+      "name": "Visits punishments / location",
+      "datasource": "athena",
+      "query": "select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year, format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n       COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n       count(id) filter(where type = 'LOSS_OF_SOCIAL_VISITS') as num_loss_puns,\n       count(CASE WHEN duration > 42 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_over_42_days,\n       count(CASE WHEN duration BETWEEN 43 AND 63 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_between_43_63_days,\n       count(CASE WHEN duration BETWEEN 64 AND 74 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_between_64_74_days,\n       count(CASE WHEN duration > 74 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_more_than_74_days,\n       max(duration) filter(where type = 'LOSS_OF_SOCIAL_VISITS') as max_loss_days,\n       count(id) filter(where type = 'RESTRICTION_OF_SOCIAL_VISITS') as num_res_puns,\n       count(CASE WHEN duration > 42 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_over_42_days,\n       count(CASE WHEN duration BETWEEN 43 AND 63 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_between_43_63_days,\n       count(CASE WHEN duration BETWEEN 64 AND 74 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_between_64_74_days,\n       count(CASE WHEN duration > 74 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_more_than_74_days,\n       max(duration) filter(where type = 'RESTRICTION_OF_SOCIAL_VISITS') as max_res_days\nfrom dps_adjudications.public.punishment as p\n         left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n                   on p.id = ps.punishment_fk_id\n         left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n                   on p.reported_adjudication_fk_id = ra.ra_id\nwhere deleted is null\ngroup by 1, ROLLUP(ra.originating_agency_id)\norder by month_year desc, location_id",
+      "schema": {
+        "field": [
+          {
+            "name": "month_year",
+            "type": "date"
+          },
+          {
+            "name": "min_date",
+            "type": "date"
+          },
+          {
+            "name": "max_date",
+            "type": "date"
+          },
+          {
+            "name": "location_id",
+            "type": "string"
+          },
+          {
+            "name": "num_loss_puns",
+            "type": "long"
+          },
+          {
+            "name": "num_loss_over_42_days",
+            "type": "long"
+          },
+          {
+            "name": "num_loss_between_43_63_days",
+            "type": "long"
+          },
+          {
+            "name": "num_loss_between_64_74_days",
+            "type": "long"
+          },
+          {
+            "name": "num_loss_more_than_74_days",
+            "type": "long"
+          },
+          {
+            "name": "max_loss_days",
+            "type": "long"
+          },
+          {
+            "name": "num_res_puns",
+            "type": "long"
+          },
+          {
+            "name": "num_res_over_42_days",
+            "type": "long"
+          },
+          {
+            "name": "num_res_between_43_63_days",
+            "type": "long"
+          },
+          {
+            "name": "num_res_between_64_74_days",
+            "type": "long"
+          },
+          {
+            "name": "num_res_more_than_74_days",
+            "type": "long"
+          },
+          {
+            "name": "max_res_days",
+            "type": "long"
+          }
+        ]
+      }
+    },
+    {
+      "id": "rehab-punishment-stats",
+      "name": "Rehabilitation activity statistics / location",
+      "datasource": "athena",
+      "query": "select\n    CAST(date_trunc('month', date_time_of_first_hearing) AS DATE) AS month,\n    COALESCE(result.originating_agency_id, 'All locations') as location_id,\n    count(reported_adjudication_fk_id) as num_adjs,\n    sum(num_punishments) as total_punishments,\n    sum(num_suspended_punishments) as total_suspended_punishments,\n    sum(num_rehab_activities) as total_rehab_activities,\n    count(reported_adjudication_fk_id) filter( where all_pun_suspended = 'Y') as num_charges_all_pun_suspended,\n    ROUND(sum(num_rehab_activities) / NULLIF(sum(num_punishments),0) * 100, 1) as per_pun_have_rehab,\n    ROUND(sum(num_rehab_activities) / NULLIF(sum(num_suspended_punishments),0) * 100, 1) as per_sus_pun_have_rehab,\n    ROUND(CAST(count(all_sus_pun_have_rehab) filter(where all_sus_pun_have_rehab = 'Y') as DECIMAL(18,2)) / NULLIF(CAST(count(reported_adjudication_fk_id) filter(where num_rehab_activities > 0) as DECIMAL(18,2)), 0) * 100, 1) as per_adjs_with_all_sus_pun_have_rehab,\n    ROUND(CAST(count(all_rehab_same) filter(where all_rehab_same = 'Y') as DECIMAL(18,2)) / NULLIF(CAST(count(reported_adjudication_fk_id) filter(where num_rehab_activities > 1) as DECIMAL(18,2)), 0) * 100, 1) as per_adjs_with_all_sus_pun_have_same_rehab\nfrom (select *,\n           CASE WHEN pun_result.num_suspended_punishments = num_punishments THEN 'Y' ELSE 'N' END as all_pun_suspended,\n           CASE WHEN pun_result.num_suspended_punishments = num_rehab_activities AND pun_result.num_suspended_punishments > 0 THEN 'Y' ELSE 'N' END as all_sus_pun_have_rehab,\n           CASE WHEN num_unique_rehab_activities = 1 and num_rehab_activities > 1 THEN 'Y' ELSE 'N' END as all_rehab_same\n    from (\n        select reported_adjudication_fk_id,\n               count(p.id) as num_punishments,\n               count(CASE WHEN p.suspended_until is not null Then p.id END) as num_suspended_punishments,\n               count(r.ra_id) as num_rehab_activities,\n               count(DISTINCT(CONCAT(r.details, r.monitor, CAST(r.end_date as varchar), CAST(r.total_sessions as varchar)))) filter(where r.ra_id is not null) as num_unique_rehab_activities\n        from dps_adjudications.public.punishment as p\n        left join (select rehabilitative_activity.punishment_fk_id, id as ra_id, details, monitor, end_date, total_sessions from dps_adjudications.public.rehabilitative_activity ) as r\n        on r.punishment_fk_id = p.id\n        where p.deleted is null\n        group by p.reported_adjudication_fk_id) as pun_result\n    left join (select id as adj_id, date_time_of_first_hearing, originating_agency_id from dps_adjudications.public.reported_adjudications) as adj\n    on pun_result.reported_adjudication_fk_id = adj.adj_id) as result\ngroup by 1, ROLLUP(originating_agency_id)",
+      "schema": {
+        "field": [
+          {
+            "name": "month",
+            "type": "date"
+          },
+          {
+            "name": "min_date",
+            "type": "date"
+          },
+          {
+            "name": "max_date",
+            "type": "date"
+          },
+          {
+            "name": "location_id",
+            "type": "string"
+          },
+          {
+            "name": "num_adjs",
+            "type": "long"
+          },
+          {
+            "name": "total_punishments",
+            "type": "long"
+          },
+          {
+            "name": "total_suspended_punishments",
+            "type": "long"
+          },
+          {
+            "name": "total_rehab_activities",
+            "type": "long"
+          },
+          {
+            "name": "num_charges_all_pun_suspended",
+            "type": "long"
+          },
+          {
+            "name": "per_pun_have_rehab",
+            "type": "float"
+          },
+          {
+            "name": "per_sus_pun_have_rehab",
+            "type": "float"
+          },
+          {
+            "name": "per_adjs_with_all_sus_pun_have_rehab",
+            "type": "float"
+          },
+          {
+            "name": "per_adjs_with_all_sus_pun_have_same_rehab",
+            "type": "float"
+          }
+        ]
+      }
+    },
     {
       "id": "prisons",
       "name": "Prisons",
@@ -554,8 +721,8 @@
     },
     {
       "id": "additional-days-added-punishments",
-      "name": "Additional days added punishments / location",
-      "description": "Additional days added by location",
+      "name": "Days added punishments / location",
+      "description": "Statistics focused on Additional and Prospective days added by location",
       "version": "1.0.0",
       "dataset": "$ref:additional-days-added-punishments",
       "render": "HTML",
@@ -600,28 +767,331 @@
           },
           {
             "name": "$ref:num_ada_puns",
-            "display": "Number of ADA punishments",
+            "display": "Total ADA punishments",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:avg_days_added",
-            "display": "Average days added",
+            "name": "$ref:num_ada_over_42_days",
+            "display": "ADA punishments with over 42 days added",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:max_days_added",
-            "display": "Maximum days added",
+            "name": "$ref:num_ada_between_43_63_days",
+            "display": "ADA punishments between 43 and 63 days added (inclusive)",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:num_over_42_days_added",
-            "display": "Number of punishments with over 42 days added",
+            "name": "$ref:num_ada_between_64_74_days",
+            "display": "ADA punishments between 64 and 74 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_ada_more_than_74_days",
+            "display": "ADA punishments more than 74 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:max_add_days_added",
+            "display": "Maximum additional days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_pda_puns",
+            "display": "Total PDA punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_pda_over_42_days",
+            "display": "PDA punishments with over 42 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_pda_between_43_63_days",
+            "display": "PDA punishments between 43 and 63 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_pda_between_64_74_days",
+            "display": "PDA punishments between 64 and 74 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_pda_more_than_74_days",
+            "display": "PDA punishments more than 74 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:max_pros_days_added",
+            "display": "Maximum prospective days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          }
+        ]
+      },
+      "destination": []
+    },
+    {
+      "id": "visits-punishments",
+      "name": "Visits punishments / location",
+      "description": "Statistics focused on loss and restriction of social visits by location",
+      "version": "1.0.0",
+      "dataset": "$ref:visits-punishments",
+      "render": "HTML",
+      "feature": [
+        {
+          "type": "print"
+        }
+      ],
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:month_year",
+            "display": "Month when punishment created",
+            "formula": "format_date(${month_year}, 'MMM-yyyy')",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": true,
+            "sortdirection": "desc",
+            "filter": {
+              "type": "daterange",
+              "default": "today(-3,months) - today()"
+            }
+          },
+          {
+            "name": "$ref:location_id",
+            "display": "Location",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "interactive": true,
+              "dynamicoptions": {
+                "maximumOptions": 140,
+                "returnAsStaticOptions": true,
+                "dataset": "prisons",
+                "name": "prison_id",
+                "display": "prison_name"
+              }
+            }
+          },
+          {
+            "name": "$ref:num_loss_puns",
+            "display": "Total loss punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_loss_over_42_days",
+            "display": "Losses over 42 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_loss_between_43_63_days",
+            "display": "Losses between 43 and 63 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_loss_between_64_74_days",
+            "display": "Losses between 64 and 74 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_loss_more_than_74_days",
+            "display": "Losses more than 74 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:max_loss_days",
+            "display": "Maximum loss days",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_res_puns",
+            "display": "Total restriction punishments",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_res_over_42_days",
+            "display": "Restrictions over 42 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_res_between_43_63_days",
+            "display": "Restrictions between 43 and 63 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_res_between_64_74_days",
+            "display": "Restrictions between 64 and 74 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_res_more_than_74_days",
+            "display": "Restrictions more than 74 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:max_res_days",
+            "display": "Maximum restriction days",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          }
+        ]
+      },
+      "destination": []
+    },
+    {
+      "id": "rehab-punishment-stats",
+      "name": "Rehabilitation activity statistics / location",
+      "description": "Statistics around punishments created including use of rehabilitation activities by location",
+      "version": "1.0.0",
+      "dataset": "$ref:rehab-punishment-stats",
+      "render": "HTML",
+      "feature": [
+        {
+          "type": "print"
+        }
+      ],
+      "specification": {
+        "template": "list",
+        "field": [
+          {
+            "name": "$ref:month",
+            "display": "Month when punishment created",
+            "formula": "format_date(${month}, 'MMM-yyyy')",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": true,
+            "sortdirection": "desc",
+            "filter": {
+              "type": "daterange",
+              "default": "today(-3,months) - today()"
+            }
+          },
+          {
+            "name": "$ref:location_id",
+            "display": "Location",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false,
+            "filter": {
+              "type": "multiselect",
+              "interactive": true,
+              "dynamicoptions": {
+                "maximumOptions": 140,
+                "returnAsStaticOptions": true,
+                "dataset": "prisons",
+                "name": "prison_id",
+                "display": "prison_name"
+              }
+            }
+          },
+          {
+            "name": "$ref:num_adjs",
+            "display": "Number of adjudications",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:total_punishments",
+            "display": "Total punishments awarded",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:total_suspended_punishments",
+            "display": "Total suspended punishments awarded",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:total_rehab_activities",
+            "display": "Total rehabilitation activities awarded",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_charges_all_pun_suspended",
+            "display": "Number of charges where all punishments were suspended",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:per_pun_have_rehab",
+            "display": "Percentage of punishments that have a rehabilitation activity",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:per_sus_pun_have_rehab",
+            "display": "Percentage of suspended punishments that have a rehabilitation activity",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:per_adjs_with_all_sus_pun_have_rehab",
+            "display": "Percentage of adjudications where all suspended punishments have a rehabilitation activity",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:per_adjs_with_all_sus_pun_have_same_rehab",
+            "display": "Percentage of adjudications where all suspended punishments have the same rehabilitation activity",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
