@@ -269,7 +269,7 @@
       "id": "privilege-punishments",
       "name": "Privilege Punishments / location",
       "datasource": "athena",
-      "query": "select result.*, COALESCE(pr.name, 'All locations') as location_name from(select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year,\n       format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n COALESCE(privilege_type, 'All privilege types') as privilege_type,\n       count(id) as num_ada_puns,\n       ROUND(avg(duration), 1) as avg_days_added,\n       max(duration) as max_days_added,\n       count(CASE WHEN duration > 42 THEN id END) as num_over_42_days_added\nfrom dps_adjudications.public.punishment as p\n left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n           on p.id = ps.punishment_fk_id\n left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n           on p.reported_adjudication_fk_id = ra.ra_id\nwhere deleted is null and type = 'PRIVILEGE'\ngroup by 1, ROLLUP(ra.originating_agency_id), ROLLUP(privilege_type)) as result\n LEFT JOIN AwsDataCatalog.prisons.prisonregister_prison as pr ON pr.prison_id = result.location_id",
+      "query": "select result.*, COALESCE(pr.name, 'All locations') as location_name \nfrom(select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year,\n         format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n         COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n         COALESCE(privilege_type, 'All privilege types') as privilege_type,\n         count(id) as num_priv_puns,\n         count(CASE WHEN duration > 42 THEN id END) as num_over_42_days,\n         count(CASE WHEN duration BETWEEN 43 AND 63 THEN id END) as num_between_43_63_days,\n         count(CASE WHEN duration BETWEEN 64 AND 74 THEN id END) as num_between_64_74_days,\n         count(CASE WHEN duration > 74 THEN id END) as num_more_than_74_days,\n         max(duration) as max_days_added\n  from dps_adjudications.public.punishment as p\n           left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n                     on p.id = ps.punishment_fk_id\n           left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n                     on p.reported_adjudication_fk_id = ra.ra_id\n  where deleted is null and type = 'PRIVILEGE'\n  group by 1, ROLLUP(ra.originating_agency_id), ROLLUP(privilege_type)) as result\n     LEFT JOIN AwsDataCatalog.prisons.prisonregister_prison as pr ON pr.prison_id = result.location_id",
       "schema": {
         "field": [
           {
@@ -293,19 +293,27 @@
             "type": "string"
           },
           {
-            "name": "num_ada_puns",
+            "name": "num_priv_puns",
             "type": "long"
           },
           {
-            "name": "avg_days_added",
+            "name": "num_over_42_days",
+            "type": "long"
+          },
+          {
+            "name": "num_between_43_63_days",
+            "type": "long"
+          },
+          {
+            "name": "num_between_64_74_days",
+            "type": "long"
+          },
+          {
+            "name": "num_more_than_74_days",
             "type": "long"
           },
           {
             "name": "max_days_added",
-            "type": "long"
-          },
-          {
-            "name": "num_over_42_days_added",
             "type": "long"
           },
           {
@@ -1166,15 +1174,36 @@
             }
           },
           {
-            "name": "$ref:num_ada_puns",
+            "name": "$ref:num_priv_puns",
             "display": "Number of privilege punishments",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:avg_days_added",
-            "display": "Average days added",
+            "name": "$ref:num_over_42_days",
+            "display": "Punishments over 42 days added",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_between_43_63_days",
+            "display": "Punishments between 43 and 63 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_between_64_74_days",
+            "display": "Punishments between 64 and 74 days added (inclusive)",
+            "sortable": true,
+            "visible": "true",
+            "defaultsort": false
+          },
+          {
+            "name": "$ref:num_more_than_74_days",
+            "display": "Punishments more than 74 days added",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
@@ -1182,13 +1211,6 @@
           {
             "name": "$ref:max_days_added",
             "display": "Maximum days added",
-            "sortable": true,
-            "visible": "true",
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:num_over_42_days_added",
-            "display": "Number of punishments with over 42 days added",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
