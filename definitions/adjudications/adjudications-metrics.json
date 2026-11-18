@@ -73,84 +73,84 @@
             "type": "long"
           },
           {
-              "name": "adjourned",
-              "type": "long"
+            "name": "adjourned",
+            "type": "long"
           },
           {
-              "name": "awaiting_review",
-              "type": "long"
+            "name": "awaiting_review",
+            "type": "long"
           },
           {
-              "name": "charge_proved",
-              "type": "long"
+            "name": "charge_proved",
+            "type": "long"
           },
           {
-              "name": "dismissed",
-              "type": "long"
+            "name": "dismissed",
+            "type": "long"
           },
           {
-              "name": "invalid_ada",
-              "type": "long"
+            "name": "invalid_ada",
+            "type": "long"
           },
           {
-              "name": "invalid_outcome",
-              "type": "long"
+            "name": "invalid_outcome",
+            "type": "long"
           },
           {
-              "name": "invalid_suspended",
-              "type": "long"
+            "name": "invalid_suspended",
+            "type": "long"
           },
           {
-              "name": "not_proceed",
-              "type": "long"
+            "name": "not_proceed",
+            "type": "long"
           },
           {
-              "name": "prosecution",
-              "type": "long"
+            "name": "prosecution",
+            "type": "long"
           },
           {
-              "name": "quashed",
-              "type": "long"
+            "name": "quashed",
+            "type": "long"
           },
           {
-              "name": "refer_gov",
-              "type": "long"
+            "name": "refer_gov",
+            "type": "long"
           },
           {
-              "name": "refer_inad",
-              "type": "long"
+            "name": "refer_inad",
+            "type": "long"
           },
           {
-              "name": "refer_police",
-              "type": "long"
+            "name": "refer_police",
+            "type": "long"
           },
           {
-              "name": "rejected",
-              "type": "long"
+            "name": "rejected",
+            "type": "long"
           },
           {
-              "name": "returned",
-              "type": "long"
+            "name": "returned",
+            "type": "long"
           },
           {
-              "name": "scheduled",
-              "type": "long"
+            "name": "scheduled",
+            "type": "long"
           },
           {
-              "name": "unscheduled",
-              "type": "long"
+            "name": "unscheduled",
+            "type": "long"
           },
           {
-              "name": "rejected_expired",
-              "type": "long"
+            "name": "rejected_expired",
+            "type": "long"
           },
           {
-              "name": "rejected_unsuitable",
-              "type": "long"
+            "name": "rejected_unsuitable",
+            "type": "long"
           },
           {
-              "name": "rejected_alternative",
-              "type": "long"
+            "name": "rejected_alternative",
+            "type": "long"
           },
           {
             "name": "location_name",
@@ -1846,5 +1846,6 @@
       },
       "destination": []
     }
-  ]
+  ],
+  "schemaversion": "1.1.0"
 }
