@@ -156,7 +156,6 @@
             "name": "$ref:latest_created_at",
             "display": "Latest incident report held",
             "formula": "format_date(${latest_created_at}, 'dd/MM/yyyy HH:mm')",
-            "type": "datetime",
             "visible": "true",
             "sortable": false,
             "defaultsort": false
@@ -192,7 +191,6 @@
           {
             "name": "$ref:checked_at",
             "display": "Checked at",
-            "type": "string",
             "visible": "true",
             "sortable": false,
             "defaultsort": false
