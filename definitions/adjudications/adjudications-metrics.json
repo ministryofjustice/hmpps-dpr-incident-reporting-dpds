@@ -405,7 +405,7 @@
       "id": "visits-punishments",
       "name": "Visits punishments / location",
       "datasource": "athena",
-      "query": "select result.*, COALESCE(pr.name, 'All locations') as location_name from(select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year, format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date, format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n       COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n       count(id) filter(where type = 'LOSS_OF_SOCIAL_VISITS') as num_loss_puns,\n       count(CASE WHEN duration > 42 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_over_42_days,\n       count(CASE WHEN duration BETWEEN 43 AND 63 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_between_43_63_days,\n       count(CASE WHEN duration BETWEEN 64 AND 74 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_between_64_74_days,\n       count(CASE WHEN duration > 74 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_loss_more_than_74_days,\n       max(duration) filter(where type = 'LOSS_OF_SOCIAL_VISITS') as max_loss_days,\n       count(id) filter(where type = 'RESTRICTION_OF_SOCIAL_VISITS') as num_res_puns,\n       count(CASE WHEN duration > 42 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_over_42_days,\n       count(CASE WHEN duration BETWEEN 43 AND 63 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_between_43_63_days,\n       count(CASE WHEN duration BETWEEN 64 AND 74 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_between_64_74_days,\n       count(CASE WHEN duration > 74 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_res_more_than_74_days,\n       max(duration) filter(where type = 'RESTRICTION_OF_SOCIAL_VISITS') as max_res_days\nfrom dps_adjudications.public.punishment as p\n         left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n                   on p.id = ps.punishment_fk_id\n         left join (select id as ra_id, originating_agency_id from dps_adjudications.public.reported_adjudications) as ra\n                   on p.reported_adjudication_fk_id = ra.ra_id\nwhere deleted is null\ngroup by 1, ROLLUP(ra.originating_agency_id)\norder by month_year desc, location_id) as result\n LEFT JOIN AwsDataCatalog.prisons.prisonregister_prison as pr ON pr.prison_id = result.location_id",
+      "query": "select result.*, COALESCE(pr.name, 'All locations') as location_name from(select CAST(date_trunc('month', p.create_datetime) AS DATE) AS month_year,\n       format_datetime(min(p.create_datetime), 'dd/MM/yyyy') AS min_date,\n       format_datetime(max(p.create_datetime), 'dd/MM/yyyy') AS max_date,\n       COALESCE(ra.originating_agency_id, 'All locations') as location_id,\n       count(id) filter(where type = 'LOSS_OF_SOCIAL_VISITS') as num_loss_puns,\n       count(CASE WHEN duration = 27 AND type = 'LOSS_OF_SOCIAL_VISITS' THEN id END) as num_max_used_loss,\n       max(duration) filter(where type = 'LOSS_OF_SOCIAL_VISITS') as max_days_loss,\n       count(id) filter(where type = 'RESTRICTION_OF_SOCIAL_VISITS') as num_res_puns,\n       count(CASE WHEN duration = 27 AND type = 'RESTRICTION_OF_SOCIAL_VISITS' THEN id END) as num_max_used_res,\n       max(duration) filter(where type = 'RESTRICTION_OF_SOCIAL_VISITS') as max_days_res,\n       count(distinct(p.reported_adjudication_fk_id)) filter( where both_visits.both_visits_puns = 'Y') as num_both_visits_puns_used,\n       string_agg(DISTINCT (ra.charge_number), ', ') filter( where both_visits.both_visits_puns = 'Y') as charges_with_both\nfrom dps_adjudications.public.punishment as p\n         left join (select punishment_fk_id, duration from dps_adjudications.public.punishment_schedule) as ps\n                   on p.id = ps.punishment_fk_id\n         left join (select id as ra_id, originating_agency_id, charge_number from dps_adjudications.public.reported_adjudications) as ra\n                   on p.reported_adjudication_fk_id = ra.ra_id\n         left join (select reported_adjudication_fk_id, CASE WHEN count(distinct(type)) > 1 THEN 'Y' ELSE null END as both_visits_puns\n                    from dps_adjudications.public.punishment\n                    where type in ('LOSS_OF_SOCIAL_VISITS', 'RESTRICTION_OF_SOCIAL_VISITS') AND deleted is null\n                    group by reported_adjudication_fk_id) as both_visits\n                   on p.reported_adjudication_fk_id = both_visits.reported_adjudication_fk_id\nwhere deleted is null\ngroup by 1, ROLLUP(ra.originating_agency_id)) as result\n LEFT JOIN AwsDataCatalog.prisons.prisonregister_prison as pr ON pr.prison_id = result.location_id",
       "schema": {
         "field": [
           {
@@ -429,23 +429,11 @@
             "type": "long"
           },
           {
-            "name": "num_loss_over_42_days",
+            "name": "num_max_used_loss",
             "type": "long"
           },
           {
-            "name": "num_loss_between_43_63_days",
-            "type": "long"
-          },
-          {
-            "name": "num_loss_between_64_74_days",
-            "type": "long"
-          },
-          {
-            "name": "num_loss_more_than_74_days",
-            "type": "long"
-          },
-          {
-            "name": "max_loss_days",
+            "name": "max_days_loss",
             "type": "long"
           },
           {
@@ -453,24 +441,20 @@
             "type": "long"
           },
           {
-            "name": "num_res_over_42_days",
+            "name": "num_max_used_res",
             "type": "long"
           },
           {
-            "name": "num_res_between_43_63_days",
+            "name": "max_days_res",
             "type": "long"
           },
           {
-            "name": "num_res_between_64_74_days",
+            "name": "num_both_visits_puns_used",
             "type": "long"
           },
           {
-            "name": "num_res_more_than_74_days",
-            "type": "long"
-          },
-          {
-            "name": "max_res_days",
-            "type": "long"
+            "name": "charges_with_both",
+            "type": "string"
           },
           {
             "name": "location_name",
@@ -1421,36 +1405,15 @@
             "defaultsort": false
           },
           {
-            "name": "$ref:num_loss_over_42_days",
-            "display": "Losses over 42 days added",
+            "name": "$ref:max_days_loss",
+            "display": "Most loss days awarded",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:num_loss_between_43_63_days",
-            "display": "Losses between 43 and 63 days added (inclusive)",
-            "sortable": true,
-            "visible": "true",
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:num_loss_between_64_74_days",
-            "display": "Losses between 64 and 74 days added (inclusive)",
-            "sortable": true,
-            "visible": "true",
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:num_loss_more_than_74_days",
-            "display": "Losses more than 74 days added",
-            "sortable": true,
-            "visible": "true",
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:max_loss_days",
-            "display": "Maximum loss days",
+            "name": "$ref:num_max_used_loss",
+            "display": "Occasions where maximum loss days (27) awarded",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
@@ -1463,36 +1426,29 @@
             "defaultsort": false
           },
           {
-            "name": "$ref:num_res_over_42_days",
-            "display": "Restrictions over 42 days added",
+            "name": "$ref:max_days_res",
+            "display": "Most restriction days awarded",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:num_res_between_43_63_days",
-            "display": "Restrictions between 43 and 63 days added (inclusive)",
+            "name": "$ref:num_max_used_res",
+            "display": "Occasions where maximum restriction days (84) awarded",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:num_res_between_64_74_days",
-            "display": "Restrictions between 64 and 74 days added (inclusive)",
+            "name": "$ref:num_both_visits_puns_used",
+            "display": "Occasions where both puns awarded",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
           },
           {
-            "name": "$ref:num_res_more_than_74_days",
-            "display": "Restrictions more than 74 days added",
-            "sortable": true,
-            "visible": "true",
-            "defaultsort": false
-          },
-          {
-            "name": "$ref:max_res_days",
-            "display": "Maximum restriction days",
+            "name": "$ref:charges_with_both",
+            "display": "Charge numbers where both puns awarded",
             "sortable": true,
             "visible": "true",
             "defaultsort": false
