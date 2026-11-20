@@ -252,7 +252,6 @@
       "description": "Trial: reads live Incident Reporting data. Same report as PECS incident reports, but every incident is read directly from the Incident Reporting service, so it is always up to date and is not affected when the reporting datamart falls behind. Visible to data wardens only while it is being trialled.<br>Lists all incidents including PECS by dates, types, report status, and establishment.<br>\nFor users of the following NOMIS report: <ul>\n<li>PECS incident Reports</li>\n</ul>",
       "version": "1.0.0",
       "dataset": "$ref:pecs-summary",
-      "policy": [],
       "render": "HTML",
       "feature": [
         {
@@ -460,8 +459,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     }
   ],
   "schemaversion": "1.1.0"

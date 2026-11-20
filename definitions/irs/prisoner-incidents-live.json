@@ -251,8 +251,7 @@
             "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?searchID=${prisoner_number}',${total_incidents},TRUE)"
           }
         ]
-      },
-      "destination": []
+      }
     }
   ],
   "schemaversion": "1.1.0"

@@ -893,8 +893,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     },
     {
       "id": "punishment-statistics",
@@ -1083,8 +1082,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     },
     {
       "id": "privilege-punishments",
@@ -1200,8 +1198,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     },
     {
       "id": "additional-days-added-punishments",
@@ -1341,8 +1338,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     },
     {
       "id": "visits-punishments",
@@ -1454,8 +1450,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     },
     {
       "id": "rehab-punishment-stats",
@@ -1574,8 +1569,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     },
     {
       "id": "hearing-outcomes",
@@ -1799,8 +1793,7 @@
             "defaultsort": false
           }
         ]
-      },
-      "destination": []
+      }
     }
   ],
   "schemaversion": "1.1.0"
