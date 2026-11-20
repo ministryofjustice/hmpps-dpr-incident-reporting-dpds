@@ -609,8 +609,7 @@
             }
           }
         ]
-      },
-      "destination": []
+      }
     }
   ],
   "dashboard": [
@@ -650,8 +649,7 @@
                   },
                   {
                     "id": "$ref:TOTAL",
-                    "display": "Total Incidents",
-                    "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${start_date}&toDate=${end_date}&location=${location}',${TOTAL},TRUE)"
+                    "display": "Total Incidents"
                   }
                 ],
                 "expectNull": true
@@ -693,8 +691,7 @@
                   },
                   {
                     "id": "$ref:TOTAL",
-                    "display": "Total Incidents",
-                    "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${start_date}&toDate=${end_date}&typeFamily=${incident_code}',${TOTAL},TRUE)"
+                    "display": "Total Incidents"
                   }
                 ],
                 "expectNull": true
@@ -738,8 +735,7 @@
                   },
                   {
                     "id": "$ref:TOTAL",
-                    "display": "Total Incidents",
-                    "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${start_date}&toDate=${end_date}&location=${location}&typeFamily=${incident_code}',${TOTAL},TRUE)"
+                    "display": "Total Incidents"
                   }
                 ],
                 "expectNull": true
@@ -781,8 +777,7 @@
                   },
                   {
                     "id": "$ref:TOTAL",
-                    "display": "Total Incidents",
-                    "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${start_date}&toDate=${end_date}&incidentStatuses=${status_code}',${TOTAL},TRUE)"
+                    "display": "Total Incidents"
                   }
                 ],
                 "expectNull": true
@@ -822,8 +817,7 @@
                   },
                   {
                     "id": "$ref:TOTAL",
-                    "display": "Total Incidents",
-                    "formula": "make_url('https://incident-reporting-${env}.hmpps.service.justice.gov.uk/reports?fromDate=${start_date}&toDate=${end_date}&location=${location}&incidentStatuses=${status_code}',${TOTAL},TRUE)"
+                    "display": "Total Incidents"
                   }
                 ],
                 "expectNull": true
