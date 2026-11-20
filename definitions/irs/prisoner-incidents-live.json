@@ -254,5 +254,6 @@
       },
       "destination": []
     }
-  ]
+  ],
+  "schemaversion": "1.1.0"
 }
